@@ -1,0 +1,104 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: She Shield AI — API Gateway + Lambda SAM Template
+
+Globals:
+  Function:
+    Timeout: 10
+    Runtime: nodejs18.x
+    Environment:
+      Variables:
+        DYNAMODB_TABLE: she-shield-contacts
+
+Parameters:
+  S3BucketName:
+    Type: String
+    Default: she-shield-ai-frontend
+    Description: S3 bucket name for the frontend static site (used for CORS origin)
+
+Resources:
+
+  SheShieldApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: SheShieldApi
+      StageName: prod
+      Cors:
+        AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+        AllowHeaders: "'Content-Type,Authorization'"
+        AllowOrigin: !Sub "'http://${S3BucketName}.s3-website-${AWS::Region}.amazonaws.com'"
+
+  ContactsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: she-shield-contacts-handler
+      Handler: index.handler
+      CodeUri: ../backend/contacts-handler/
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: she-shield-contacts
+      Events:
+        GetContacts:
+          Type: Api
+          Properties:
+            RestApiId: !Ref SheShieldApi
+            Path: /contacts
+            Method: GET
+        PostContacts:
+          Type: Api
+          Properties:
+            RestApiId: !Ref SheShieldApi
+            Path: /contacts
+            Method: POST
+        PutContact:
+          Type: Api
+          Properties:
+            RestApiId: !Ref SheShieldApi
+            Path: /contacts/{phone}
+            Method: PUT
+        DeleteContact:
+          Type: Api
+          Properties:
+            RestApiId: !Ref SheShieldApi
+            Path: /contacts/{phone}
+            Method: DELETE
+
+  SosFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: she-shield-sos-handler
+      Handler: index.handler
+      CodeUri: ../backend/sos-handler/
+      Environment:
+        Variables:
+          SNS_TOPIC_ARN: !Ref SosAlertTopic
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: she-shield-contacts
+        - SNSPublishMessagePolicy:
+            TopicName: !GetAtt SosAlertTopic.TopicName
+      Events:
+        PostSos:
+          Type: Api
+          Properties:
+            RestApiId: !Ref SheShieldApi
+            Path: /sos
+            Method: POST
+
+  SosAlertTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: she-shield-sos-alerts
+
+Outputs:
+  ApiGatewayUrl:
+    Description: API Gateway endpoint URL
+    Value: !Sub "https://${SheShieldApi}.execute-api.${AWS::Region}.amazonaws.com/prod"
+    Export:
+      Name: SheShieldApiUrl
+
+  S3BucketName:
+    Description: S3 bucket name for static frontend hosting
+    Value: !Ref S3BucketName
+    Export:
+      Name: SheShieldS3BucketName

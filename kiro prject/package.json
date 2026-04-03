@@ -1,0 +1,40 @@
+{
+  "name": "she-shield-ai",
+  "version": "1.0.0",
+  "description": "AI-powered women's safety web application",
+  "scripts": {
+    "test": "jest",
+    "test:unit": "jest tests/unit",
+    "test:integration": "jest tests/integration",
+    "test:smoke": "jest tests/smoke"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.600.0",
+    "@aws-sdk/client-sns": "^3.600.0",
+    "@aws-sdk/lib-dynamodb": "^3.600.0"
+  },
+  "devDependencies": {
+    "fast-check": "^3.22.0",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0"
+  },
+  "jest": {
+    "projects": [
+      {
+        "displayName": "unit",
+        "testEnvironment": "jsdom",
+        "testMatch": ["<rootDir>/tests/unit/**/*.test.js"]
+      },
+      {
+        "displayName": "integration",
+        "testEnvironment": "node",
+        "testMatch": ["<rootDir>/tests/integration/**/*.test.js"]
+      },
+      {
+        "displayName": "smoke",
+        "testEnvironment": "node",
+        "testMatch": ["<rootDir>/tests/smoke/**/*.test.js"]
+      }
+    ]
+  }
+}
