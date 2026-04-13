@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+
+# Build output
+.dist/
+dist/
+build/
+
+# Environment
+.env
+.env.*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE / Kiro
+.kiro/
+.vscode/
+.idea/
+
+# Backend & infra (not needed for frontend deploy)
+backend/
+infra/
+tests/
+package.json
+package-lock.json
+*.md
+!README.md
